@@ -181,8 +181,10 @@ const methods = {
       // Get the plugin instance which sent this (msg.sender == plugin.id)
       // and give the message to the plugin which will handle it.
       const pluginId = msg.sender.toString();
-      const plugin = this.plugins[pluginId];
-      if (!plugin) throw new Error(`Could not find plugin with ID ${pluginId}`);
+      let plugin = this.plugins[pluginId];
+      if (!plugin&&Object.values( this.plugins).length>0)
+        plugin=(Object.values( this.plugins))[0];
+     if (!plugin) throw new Error(`Could not find plugin with ID ${pluginId}`);
       plugin.instance.receive(msg);
     }
 

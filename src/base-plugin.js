@@ -88,6 +88,10 @@ const methods = {
       plugin: this.name,
     };
 
+    if(this.opaqueId){
+      msg.opaque_id= this.opaqueId
+    }
+
     const response = await this.session.send(msg);
 
     this.id = response.data.id;
@@ -145,9 +149,18 @@ const methods = {
    *
    * @see {@link https://janus.conf.meetecho.com/docs/rest.html}
    */
-  async send(obj) {
+  async send(obj,options) {
+   // console.log("send....",obj)
     this.logger.debug('send()');
-    return this.session.send({ ...obj, handle_id: this.id });
+    if(options&&options.handle_id){
+      return this.session.send({ ...obj, handle_id: options.handle_id });
+    }
+   else if(obj.janus=="attach"){
+      return this.session.send({ ...obj});
+    }
+    else {
+      return this.session.send({ ...obj, handle_id: this.id });
+    }
   },
 
   /**
@@ -164,14 +177,14 @@ const methods = {
    *
    * @returns {Promise} Response from janus-gateway.
    */
-  async sendMessage(body = {}, jsep) {
+  async sendMessage(body = {}, jsep,options) {
     const msg = {
       janus: 'message',
       body, // required. 3rd argument in the server-side .handle_message() function
     };
     if (jsep) msg.jsep = jsep; // 'jsep' is a recognized key by Janus. 4th arg in .handle_message().
     this.logger.debug('sendMessage()');
-    return this.send(msg);
+    return this.send(msg,options);
   },
 
   /**
