@@ -182,9 +182,11 @@ const methods = {
       // and give the message to the plugin which will handle it.
       const pluginId = msg.sender.toString();
       let plugin = this.plugins[pluginId];
-      if (!plugin&&Object.values( this.plugins).length>0)
-        plugin=(Object.values( this.plugins))[0];
-     if (!plugin) throw new Error(`Could not find plugin with ID ${pluginId}`);
+      if (!plugin && Object.values(this.plugins).length > 0) {
+        // eslint-disable-next-line prefer-destructuring
+        plugin = (Object.values(this.plugins))[0];
+      }
+      if (!plugin) throw new Error(`Could not find plugin with ID ${pluginId}`);
       plugin.instance.receive(msg);
     }
 

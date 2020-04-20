@@ -88,8 +88,8 @@ const methods = {
       plugin: this.name,
     };
 
-    if(this.opaqueId){
-      msg.opaque_id= this.opaqueId
+    if (this.opaqueId) {
+      msg.opaque_id = this.opaqueId;
     }
 
     const response = await this.session.send(msg);
@@ -143,24 +143,24 @@ const methods = {
    * @private
    * @param {Object} obj - Should be JSON-serializable. Expected to have a key 'janus'
    * with one of the following values: 'attach|detach|message|trickle|hangup'
+   * @param options  {Object} obj - Should be JSON-serializable. Expected to have a key 'handle_id'
    *
    * @returns {Promise} Rejected if synchronous reply contains `janus: 'error'` or response
    * takes too long. Resolved otherwise.
    *
    * @see {@link https://janus.conf.meetecho.com/docs/rest.html}
    */
-  async send(obj,options) {
-   // console.log("send....",obj)
+  async send(obj, options) {
     this.logger.debug('send()');
-    if(options&&options.handle_id){
-      return this.session.send({ ...obj, handle_id: options.handle_id });
+    let sendMsg = {};
+    if (options && options.handle_id) {
+      sendMsg = { ...obj, handle_id: options.handle_id };
+    } if (obj.janus === 'attach') {
+      sendMsg = obj;
+    } else {
+      sendMsg = { ...obj, handle_id: this.id };
     }
-   else if(obj.janus=="attach"){
-      return this.session.send({ ...obj});
-    }
-    else {
-      return this.session.send({ ...obj, handle_id: this.id });
-    }
+    return this.session.send(sendMsg);
   },
 
   /**
@@ -175,16 +175,17 @@ const methods = {
    * @param {Object} [jsep] - Should be JSON-serializable. Will be provided to the
    * `.handle_message` C function as `json_t *jsep`.
    *
+   * @param options Should be JSON-serializable. Expected to have a key 'handle_id'
    * @returns {Promise} Response from janus-gateway.
    */
-  async sendMessage(body = {}, jsep,options) {
+  async sendMessage(body = {}, jsep, options) {
     const msg = {
       janus: 'message',
       body, // required. 3rd argument in the server-side .handle_message() function
     };
     if (jsep) msg.jsep = jsep; // 'jsep' is a recognized key by Janus. 4th arg in .handle_message().
     this.logger.debug('sendMessage()');
-    return this.send(msg,options);
+    return this.send(msg, options);
   },
 
   /**
