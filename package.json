@@ -8,7 +8,7 @@
   "author": "Michael Karl Franzl",
   "license": "MIT",
   "engines": {
-    "node": ">=13.11.0"
+    "node": ">=12.14.0"
   },
   "repository": {
     "type": "git",
