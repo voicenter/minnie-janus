@@ -155,7 +155,7 @@ const methods = {
     let sendMsg = {};
     if (options && options.handle_id) {
       sendMsg = { ...obj, handle_id: options.handle_id };
-    } if (obj.janus === 'attach') {
+    } else if (obj.janus === 'attach') {
       sendMsg = obj;
     } else {
       sendMsg = { ...obj, handle_id: this.id };
@@ -240,23 +240,6 @@ const methods = {
    */
   async receive(msg) {
     this.logger.debug(`Abstract method 'receive' called with message ${msg}`);
-  },
-  randomString(len) {
-    const charSet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let randomStr = '';
-    // eslint-disable-next-line no-plusplus
-    for (let i = 0; i < len; i++) {
-      const randomPoz = Math.floor(Math.random() * charSet.length);
-      randomStr += charSet.substring(randomPoz, randomPoz + 1);
-    }
-    return randomStr;
-  },
-  async  asyncForEach(array, callback) {
-  // eslint-disable-next-line no-plusplus
-    for (let index = 0; index < array.length; index++) {
-    // eslint-disable-next-line no-await-in-loop
-      await callback(array[index], index, array);
-    }
   },
 };
 
