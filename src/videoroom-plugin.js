@@ -1,4 +1,4 @@
-
+/* eslint-disable no-console */
 /*
 minnie-janus - Minimal and modern JavaScript interface for the Janus WebRTC gateway
 
@@ -25,6 +25,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 import BasePluginStamp from './base-plugin-stamp';
+import Member from './memeber';
 
 /**
  * @lends EchotestPlugin
@@ -34,9 +35,8 @@ const properties = {
    * @override
    */
   name: 'janus.plugin.videoroom',
-
+  memeberList: {},
   rtcconn: null,
-  vid_remote: document.createElement('video'),
   vid1_remote: document.createElement('video'),
   vid_local: document.createElement('video'),
 };
@@ -88,50 +88,28 @@ const methods = {
     const that = this;
     console.log('on receive', msg);
     if (msg.plugindata && msg.plugindata.data.videoroom === 'attached') {
-      this.awnserAttachedStream(msg);
+      if (this.memeberList[msg.plugindata.data.id]) {
+        this.memeberList[msg.plugindata.data.id].awnserAttachedStream(msg);
+      } else {
+        this.awnserAttachedStream(msg);
+      }
     } else if (msg.plugindata && msg.plugindata.data.publishers) {
       // let private_id=msg.plugindata.data.private_id
-      msg.plugindata.data.publishers.forEach((stream) => {
-        console.log('plugindata.data.publishers', stream);
+      msg.plugindata.data.publishers.forEach((publisher) => {
+        console.log('plugindata.data.publishers', publisher);
+
+        if (!this.memeberList[publisher.id]) {
+          this.memeberList[publisher.id] = new Member(publisher, this);
+          this.memeberList[publisher.id].AttachMember();
+        }
       });
       //
       that.publishers = msg.plugindata.data.publishers;
       that.private_id = msg.plugindata.data.private_id;
-      that.attachedStream();
+      //   that.attachedStream();
       //  console.log('attach Resualt',attachResualt);
     }
     this.logger.info('Received message from Janus', msg);
-  },
-
-  /**
-   * Set up a bi-directional WebRTC connection:
-   *
-   * 1. get local media
-   * 2. create and send a SDP offer
-   * 3. receive a SDP answer and add it to the RTCPeerConnection
-   * 4. negotiate ICE (can happen concurrently with the SDP exchange)
-   * 5. Play the video via the `onaddstream` event of RTCPeerConnection
-   *
-   * @private
-   * @override
-   */
-  async attachedStream() {
-    console.log('publishers', this.publishers);
-    if (!this.publishers || this.publishers.length === 0) return;
-    // eslint-disable-next-line no-restricted-syntax
-    for (const publisher of this.publishers) {
-      console.log(publisher);
-      // eslint-disable-next-line no-await-in-loop
-      const attachResult = await this.send({ janus: 'attach', opaque_id: this.opaqueId, plugin: 'janus.plugin.videoroom' });
-      console.log('attach member Result ', attachResult);
-      const handleId = attachResult.data.id;
-
-      // eslint-disable-next-line no-await-in-loop
-      const joinResult = await this.sendMessage({
-        request: 'join', room: 1234, feed: publisher.id, ptype: 'subscriber', private_id: this.private_id,
-      }, undefined, { handle_id: handleId });
-      console.log('joinResualt', joinResult);
-    }
   },
   /**
    * Set up a bi-directional WebRTC connection:
@@ -196,11 +174,7 @@ const methods = {
     await this.rtcconn.setRemoteDescription(confResult.jsep);
   },
   async awnserAttachedStream(attachedStreamInfo) {
-    console.log('attachedStreamInfo', attachedStreamInfo);
-    this.logger.debug('Setting the SDP answer on RTCPeerConnection. The `onaddstream` event will fire soon.');
-    // if(this.rtcconn1.sender)return ;
-    this.rtcconn1.sender = attachedStreamInfo.sender;
-    await this.rtcconn1.setRemoteDescription(attachedStreamInfo.jsep);
+    console.log('attachedStreamInfo for non memeber WTF ???', attachedStreamInfo);
   },
 };
 
@@ -212,38 +186,11 @@ function init() {
   // eslint-disable-next-line no-use-before-define
   this.opaqueId = `videoroomtest-${randomString(12)}`;
   console.log('Init plugin', this);
-  this.vid_remote.width = 320;
+  // this.vid_remote.width = 320;
   this.vid_local.width = 320;
 
   this.rtcconn = new RTCPeerConnection();
 
-  // RTCPeerconnection#onaddstream fires after the SDP answer has been set.
-  this.rtcconn.onaddstream = (event) => {
-    console.log('RTCPeerConnection got remote media stream. Playing.', event);
-    this.logger.info('RTCPeerConnection got remote media stream. Playing.');
-    this.vid_remote.srcObject = event.stream;
-    this.vid_remote.play();
-  };
-
-  this.rtcconn1 = new RTCPeerConnection();
-
-  // RTCPeerconnection#onaddstream fires after the SDP answer has been set.
-  this.rtcconn1.onaddstream = async (event) => {
-    console.log('onaddstream1', event);
-
-    const answerSdp = await this.rtcconn1.createAnswer({
-      audio: true,
-      video: true,
-    });
-    await this.rtcconn1.setLocalDescription(answerSdp);
-
-    // Send the answer to the remote peer through the signaling server.
-    await this.sendMessage({ request: 'start', room: 1234 }, answerSdp, { handle_id: this.rtcconn1.sender });
-
-
-    this.vid1_remote.srcObject = event.stream;
-    await this.vid1_remote.play();
-  };
   // Send ICE events to Janus.
   this.rtcconn.onicecandidate = (event) => {
     //   console.log("onnegotiationneeded",event);
@@ -251,23 +198,22 @@ function init() {
     this.sendTrickle(event.candidate || null);
   };
   // Send ICE events to Janus.
-  this.rtcconn1.onicecandidate = (event) => {
+  /* this.rtcconn1.onicecandidate = (event) => {
     //    console.log("onnegotiationneeded1",event);
     if (this.rtcconn1.signalingState !== 'stable') return;
     this.sendTrickle(event.candidate || null);
   };
-
+*/
   this.vid_local.controls = true;
   this.vid_local.muted = true;
   document.body.appendChild(this.vid_local);
 
-  this.vid_remote.controls = true;
-  this.vid_remote.muted = true;
-  document.body.appendChild(this.vid_remote);
-
+  /*
   this.vid1_remote.controls = true;
   this.vid1_remote.muted = true;
   document.body.appendChild(this.vid1_remote);
+*/
+
   console.log('Finish init ', this);
 }
 

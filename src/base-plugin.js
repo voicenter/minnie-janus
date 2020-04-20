@@ -60,6 +60,13 @@ const properties = {
    * @readonly
    */
   attached: false,
+
+  /**
+   * memeberList connected on that plugin
+   * @member {Object}
+   * @instance
+   */
+  memeberList: {},
 };
 
 /**
@@ -261,10 +268,6 @@ const methods = {
  *
  * @param {Object} [options={}]
  * @param {Object} [options.logger] - The logger to use
- * @param {Function} [options.logger.info=function(){}]
- * @param {Function} [options.logger.warn=function(){}]
- * @param {Function} [options.logger.debug=function(){}]
- * @param {Function} [options.logger.error=function(){}]
  * @return {BasePlugin}
  */
 function init({
