@@ -52,4 +52,14 @@ module.exports = class Memeber {
     this.RTCPeer.sender = attachedStreamInfo.sender;
     await this.RTCPeer.setRemoteDescription(attachedStreamInfo.jsep);
   }
+
+  hangup() {
+    console.log('hangup', this.Info);
+    this.RTCPeer.close();
+    this.RTCPeer = null;
+    this.Video.pause();
+    this.Video.removeAttribute('src'); // empty source
+    this.Video.load();
+    this.Video.disabled = true;
+  }
 };

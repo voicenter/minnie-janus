@@ -94,6 +94,11 @@ const methods = {
       } else {
         this.awnserAttachedStream(msg);
       }
+    } else if (msg.janus === 'hangup') {
+      const hangupMember = (Object.values(this.memeberList).filter(
+        (member) => member.HandleId === msg.sender,
+      ))[0];
+      hangupMember.hangup();
     } else if (msg.plugindata && msg.plugindata.data.publishers) {
       // let private_id=msg.plugindata.data.private_id
       msg.plugindata.data.publishers.forEach((publisher) => {
