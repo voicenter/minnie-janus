@@ -132,13 +132,30 @@ const methods = {
   async onAttached() {
     console.log('onAttached !!!!!!!!!!!!!!!!!!!!!!');
     this.logger.info('Asking user to share media. Please wait...');
-    const localmedia = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: true,
-    });
-    this.logger.info('Got local user media.');
+    let localmedia;
+    try {
+      localmedia = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
+      this.logger.info('Got local user media.');
 
-    console.log('Lets Join a room ');
+      console.log('Lets Join a room localmedia:', localmedia);
+    } catch (e) {
+      try {
+        console.log('Can get Video Lets try audio only ...');
+        localmedia = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: false,
+        });
+      } catch (ex) {
+        console.log('Can get audio as well Lets try no input ...', ex);
+        localmedia = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: false,
+        });
+      }
+    }
     const joinResualt = await this.sendMessage({
       request: 'join', room: this.room_id, ptype: 'publisher', display: '33333', opaque_id: this.opaqueId,
     });
