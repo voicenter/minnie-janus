@@ -17,7 +17,7 @@ module.exports = class Memeber {
 
     // eslint-disable-next-line no-await-in-loop
     const joinResult = await this.Plugin.sendMessage({
-      request: 'join', room: 1234, feed: this.Info.id, ptype: 'subscriber', private_id: this.Plugin.private_id,
+      request: 'join', room: this.Plugin.room_id, feed: this.Info.id, ptype: 'subscriber', private_id: this.Plugin.private_id,
     }, undefined, { handle_id: this.HandleId });
     console.log('joinResualt', joinResult);
     this.Video = document.createElement('video');
@@ -36,7 +36,7 @@ module.exports = class Memeber {
       });
       await that.RTCPeer.setLocalDescription(answerSdp);
       // Send the answer to the remote peer through the signaling server.
-      await that.Plugin.sendMessage({ request: 'start', room: 1234 }, answerSdp, { handle_id: that.HandleId });
+      await that.Plugin.sendMessage({ request: 'start', room: that.Plugin.room_id }, answerSdp, { handle_id: that.HandleId });
       that.Video.srcObject = event.stream;
       await that.Video.play();
     }

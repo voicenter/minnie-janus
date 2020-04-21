@@ -36,9 +36,8 @@ const properties = {
    */
   name: 'janus.plugin.videoroom',
   memeberList: {},
-  rtcconn: null,
-  vid1_remote: document.createElement('video'),
   vid_local: document.createElement('video'),
+  room_id: 1234,
 };
 
 /**
@@ -87,7 +86,9 @@ const methods = {
   receive(msg) {
     const that = this;
     console.log('on receive', msg);
-    if (msg.plugindata && msg.plugindata.data.videoroom === 'attached') {
+    if (msg.plugindata && msg.plugindata.data.error_code) {
+      console.error('plugindata.data error :', msg.plugindata.data);
+    } else if (msg.plugindata && msg.plugindata.data.videoroom === 'attached') {
       if (this.memeberList[msg.plugindata.data.id]) {
         this.memeberList[msg.plugindata.data.id].awnserAttachedStream(msg);
       } else {
@@ -134,7 +135,7 @@ const methods = {
 
     console.log('Lets Join a room ');
     const joinResualt = await this.sendMessage({
-      request: 'join', room: 1234, ptype: 'publisher', display: '33333', opaque_id: this.opaqueId,
+      request: 'join', room: this.room_id, ptype: 'publisher', display: '33333', opaque_id: this.opaqueId,
     });
 
     console.log('Playing local user media in video element.', joinResualt);

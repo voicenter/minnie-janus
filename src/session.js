@@ -101,7 +101,7 @@ const methods = {
    * @public
    * @param {BasePlugin} plugin - An instance of an (extended) BasePlugin
    * @emits Session#plugin_attached
-   * @listens BasePlugin#detached
+   * @listens BasePlugin
    * @returns {Promise} Response from Janus
    */
   async attachPlugin(plugin) {
@@ -201,7 +201,7 @@ const methods = {
    * directly. Use {@link Session#sendKeepalive}, {@link Session#create} or {@link Session@destroy}
    * instead.
    *
-   * @private
+   * @public
    * @param {Object} msg - The message object to send. Properties `session_id` and `transaction`
    * will be added automatically.
    * @see {@link https://janus.conf.meetecho.com/docs/rest.html}
@@ -302,10 +302,6 @@ Object.assign(methods, EventEmitter({ emit_prop: 'emit' }));
  * on a response from Janus.
  * @param {Integer} [options.keepaliveMs] The interval in milliseconds between keepalive messages.
  * @param {Object} [options.logger] - The logger to use
- * @param {Function} [options.logger.info=function(){}]
- * @param {Function} [options.logger.warn=function(){}]
- * @param {Function} [options.logger.debug=function(){}]
- * @param {Function} [options.logger.error=function(){}]
  * @return {Session}
  */
 function init({

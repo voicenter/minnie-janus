@@ -67,6 +67,12 @@ const properties = {
    * @instance
    */
   memeberList: {},
+  /**
+   * memeberList connected on that plugin
+   * @member {Number}
+   * @instance
+   */
+  room_id: 1234,
 };
 
 /**
@@ -241,7 +247,7 @@ const methods = {
    *
    * This method always contains plugin-specific logic and can be overridden.
    *
-   * @protected
+   * @public
    * @abstract
    * @param {Object} msg - Object parsed from server-side JSON
    */
