@@ -40,6 +40,7 @@ const props = {
 
   next_transaction_id: 0,
   keepalive_timeout: null,
+  conncted: false,
 };
 
 /**
@@ -65,6 +66,8 @@ const methods = {
    */
   async create() {
     const response = await this.send({ janus: 'create' });
+    // todo check response ...
+    this.conncted = true;
     this.id = response.data.id;
     return response;
   },
@@ -77,6 +80,7 @@ const methods = {
    * @returns {Promise} Response from Janus
    */
   async destroy() {
+    this.conncted = false;
     const pluginDetachPromises = Object.entries(this.plugins).map(([, plugin]) => {
       this.logger.debug('Detaching plugin before destroying session', plugin.instance.name);
       return plugin.instance.detach();
@@ -249,6 +253,7 @@ const methods = {
   stop() {
     this.logger.debug('stop()');
     this.stopKeepalive();
+    this.conncted = false;
   },
 
   /**

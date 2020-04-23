@@ -3,10 +3,9 @@
  */
 
 import BasePluginStamp from './base-plugin-stamp';
-import Member from './memeber';
 
 /**
- * @lends VideoRoomPlugin
+ * @lends ScreenSharePlugin
  */
 const properties = {
   /**
@@ -14,12 +13,12 @@ const properties = {
    */
   name: 'janus.plugin.videoroom',
   memeberList: {},
-  vid_local: document.createElement('video'),
+  vid_local_screen: document.createElement('video'),
   room_id: 1234,
 };
 
 /**
- * @lends VideoRoomPlugin.prototype
+ * @lends ScreenSharePlugin.prototype
  */
 const methods = {
   /**
@@ -62,14 +61,15 @@ const methods = {
    * @override
    */
   receive(msg) {
-    const that = this;
-    console.log('on receive', msg);
+    // const that = this;
+    console.log('on receive ScreenSharePlugin', msg);
     if (msg.plugindata && msg.plugindata.data.error_code) {
-      console.error('plugindata.data error :', msg.plugindata.data);
-    } else if (msg.plugindata && msg.plugindata.data.videoroom === 'attached') {
-      if (this.memeberList[msg.plugindata.data.id]) {
-        this.memeberList[msg.plugindata.data.id].awnserAttachedStream(msg);
-      } else {
+      console.error('plugindata.data ScreenSharePlugin error :', msg.plugindata.data);
+    } else if (msg.plugindata && msg.plugindata.data.videoroom === 'joined') {
+      console.log('Self Joiend event ', msg.plugindata.data.id);
+      console.log('VideoRoomPlugin ', this.VideoRoomPlugin);
+      this.VideoRoomPlugin.myFeedList.push(msg.plugindata.data.id);
+    } /* else {
         this.awnserAttachedStream(msg);
       }
     } else if (msg.janus === 'hangup') {
@@ -82,7 +82,7 @@ const methods = {
       msg.plugindata.data.publishers.forEach((publisher) => {
         console.log('plugindata.data.publishers', publisher);
 
-        if (!this.memeberList[publisher.id] && !this.myFeedList.includes(publisher.id)) {
+        if (!this.memeberList[publisher.id]) {
           this.memeberList[publisher.id] = new Member(publisher, this);
           this.memeberList[publisher.id].AttachMember();
         }
@@ -92,8 +92,8 @@ const methods = {
       that.private_id = msg.plugindata.data.private_id;
       //   that.attachedStream();
       //  console.log('attach Resualt',attachResualt);
-    }
-    this.logger.info('Received message from Janus', msg);
+    } */
+    this.logger.info('Received  message from Janus ScreenSharePlugin', msg);
   },
   /**
    * Set up a bi-directional WebRTC connection:
@@ -108,50 +108,34 @@ const methods = {
    * @override
    */
   async onAttached() {
-    console.log('onAttached !!!!!!!!!!!!!!!!!!!!!!');
+    console.log('onAttached ScreenSharePlugin !!!!!!!!!!!!!!!!!!!!!!');
     this.logger.info('Asking user to share media. Please wait...');
-    let localmedia;
-    try {
-      localmedia = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: true,
-      });
-      this.logger.info('Got local user media.');
 
-      console.log('Lets Join a room localmedia:', localmedia);
+    let localmedia;
+
+    try {
+      localmedia = await navigator.mediaDevices.getDisplayMedia();
+      this.logger.info('Got local user Screen .');
+
+      console.log('Got local user Screen  localmedia:', localmedia);
     } catch (e) {
-      try {
-        console.log('Can get Video Lets try audio only ...');
-        localmedia = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: false,
-        });
-      } catch (ex) {
-        console.log('Can get audio as well Lets try no input ...', ex);
-        localmedia = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: false,
-        });
-      }
+      console.error('No screen share on this browser ...');
+      return;
     }
+
     const joinResualt = await this.sendMessage({
-      request: 'join', room: this.room_id, ptype: 'publisher', display: '33333', opaque_id: this.opaqueId,
+      request: 'join', room: this.room_id, ptype: 'publisher', display: 'Screen Share', opaque_id: this.opaqueId,
     });
 
     console.log('Playing local user media in video element.', joinResualt);
-    /*      let attachResualt = await this.send({janus: "attach"})
-
-          console.log('attach Resualt',attachResualt); */
     this.logger.info('Playing local user media in video element.');
-    this.vid_local.srcObject = localmedia;
-    this.vid_local.play();
-
+    this.vid_local_screen.srcObject = localmedia;
+    this.vid_local_screen.play();
     this.logger.info('Adding local user media to RTCPeerConnection.');
     this.rtcconn.addStream(localmedia);
-
     this.logger.info('Creating SDP offer. Please wait...');
     const jsepOffer = await this.rtcconn.createOffer({
-      audio: true,
+      audio: false,
       video: true,
     });
 
@@ -169,18 +153,15 @@ const methods = {
     */
     //
     // await this.send({janus: "attach",opaque_id: this.opaqueId,plugin: "janus.plugin.videoroom"})
-    const confResult = await this.sendMessage({ request: 'configure', audio: true, video: true }, jsepOffer);
-    console.log('Received SDP answer from Janus.', confResult);
+    const confResult = await this.sendMessage({ request: 'configure', audio: false, video: true }, jsepOffer);
+    console.log('Received SDP answer from Janus for ScreenShare.', confResult);
     this.logger.debug('Setting the SDP answer on RTCPeerConnection. The `onaddstream` event will fire soon.');
     await this.rtcconn.setRemoteDescription(confResult.jsep);
-  },
-  async awnserAttachedStream(attachedStreamInfo) {
-    console.log('attachedStreamInfo for non memeber WTF ???', attachedStreamInfo);
   },
 };
 
 /**
- * @constructs VideoRoomPlugin
+ * @constructs ScreenSharePlugin
  * @mixes BasePlugin
  */
 function init() {
@@ -188,7 +169,7 @@ function init() {
   this.opaqueId = `videoroomtest-${randomString(12)}`;
   console.log('Init plugin', this);
   // this.vid_remote.width = 320;
-  this.vid_local.width = 320;
+  this.vid_local_screen.width = 320;
 
   this.rtcconn = new RTCPeerConnection();
   // Send ICE events to Janus.
@@ -198,9 +179,9 @@ function init() {
     this.sendTrickle(event.candidate || null);
   };
 
-  this.vid_local.controls = true;
-  this.vid_local.muted = true;
-  document.body.appendChild(this.vid_local);
+  this.vid_local_screen.controls = true;
+  this.vid_local_screen.muted = true;
+  document.body.appendChild(this.vid_local_screen);
 
   /*
   this.vid1_remote.controls = true;

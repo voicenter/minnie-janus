@@ -68,11 +68,18 @@ const properties = {
    */
   memeberList: {},
   /**
-   * memeberList connected on that plugin
+   * room_id room_id to be connected to
    * @member {Number}
    * @instance
    */
   room_id: 1234,
+  /**
+   * myFeedList my own video feed from other plugin
+   * @member {Number}
+   * @instance
+   */
+  myFeedList: [],
+  VideoRoomPlugin: [],
 };
 
 /**
